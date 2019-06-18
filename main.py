@@ -3,7 +3,8 @@
 from pynput.keyboard import Key, Controller
 import socket
 import qrcode
-import os
+import winsound
+import datetime
 
 keyboard = Controller()
 
@@ -37,17 +38,17 @@ def get_host_ip():
 
 
 def key_input(t):
+    winsound.PlaySound("PromptSound.wav", flags=1)
     keyboard.type(t)
     keyboard.press(Key.enter)
     keyboard.release(Key.enter)
-    os.system("PromptSound.wav")
 
 
 SIZE = 1024
 PORT = 9306
 local_ip = get_host_ip()
 ip_port = ('0.0.0.0', PORT)
-s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # udp协议
+s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 s.bind(ip_port)
 server_addr = '{}:{}'.format(local_ip, PORT)
 
@@ -57,8 +58,14 @@ show_img(server_addr)
 while True:
     data, client_addr = s.recvfrom(SIZE)
     text = data.decode('utf-8')
-    # print('server收到的数据', text)
-    key_input(text)
-    # server.sendto(data.upper(), client_addr)
+    if text == 'testConnection':
+        print('连接成功... ip:', client_addr)
+        s.sendto(b'connectionSucceeded', client_addr)
+    else:
+        print(datetime.datetime.now(), text)
+        key_input(text)
+        s.sendto(b'success', client_addr)
 
 # s.close()
+
+
